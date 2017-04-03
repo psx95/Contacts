@@ -18,8 +18,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".AddNewContact"
-            android:theme="@style/AddContact"></activity>
+        <activity
+            android:name=".AddNewContact"
+            android:theme="@style/AddContact" />
+        <activity android:name=".Model.ViewContact"></activity>
     </application>
 
 </manifest>

@@ -38,42 +38,47 @@ public class MainActivity extends AppCompatActivity {
     private DatabaseHandler databaseHandler;
     private FloatingActionButton floatingActionButton;
     private ActionBar actionBar;
+    private int prevId = -99;
 
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = new BottomNavigationView.OnNavigationItemSelectedListener() {
 
         @Override
         public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-            switch (item.getItemId()) {
-                case R.id.navigation_home:
-                    frameLayoutContainer.removeAllViews();
-                    LayoutInflater.from(context).inflate(R.layout.all_contacts,frameLayoutContainer,true);
-                    recyclerView_all_contacts = (RecyclerView) frameLayoutContainer.findViewById(R.id.contacts_holder);
-                    floatingActionButton = (FloatingActionButton) frameLayoutContainer.findViewById(R.id.floatingActionButton);
-                    floatingActionButton.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View view) {
-                            Toast.makeText(context,"Click Recieved",Toast.LENGTH_SHORT).show();
-                            Intent intent = new Intent(context, AddNewContact.class);
-                            startActivity(intent);
-                        }
-                    });
-                    LinearLayoutManager linearLayoutManager = new LinearLayoutManager(context);
-                    linearLayoutManager.setOrientation(LinearLayoutManager.VERTICAL);
-                    recyclerView_all_contacts.setLayoutManager(linearLayoutManager);
-                    populateList();
-                    checkIfContactsPresent();
-                    allContactsAdapter = new AllContactsAdapter(context,allContactList);
-                    recyclerView_all_contacts.setAdapter(allContactsAdapter);
-                    return true;
-                case R.id.navigation_dashboard:
-                    frameLayoutContainer.removeAllViews();
-                    LayoutInflater.from(context).inflate(R.layout.favourite_contacts,frameLayoutContainer,true);
-                    return true;
-                case R.id.navigation_notifications:
-                    frameLayoutContainer.removeAllViews();
-                    LayoutInflater.from(context).inflate(R.layout.linked_contacts,frameLayoutContainer,true);
-                    return true;
+            int id  = item.getItemId();
+            if (id != prevId) {
+                prevId = id;
+                switch (id) {
+                    case R.id.navigation_home:
+                        frameLayoutContainer.removeAllViews();
+                        LayoutInflater.from(context).inflate(R.layout.all_contacts, frameLayoutContainer, true);
+                        recyclerView_all_contacts = (RecyclerView) frameLayoutContainer.findViewById(R.id.contacts_holder);
+                        floatingActionButton = (FloatingActionButton) frameLayoutContainer.findViewById(R.id.floatingActionButton);
+                        floatingActionButton.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                Toast.makeText(context, "Click Recieved", Toast.LENGTH_SHORT).show();
+                                Intent intent = new Intent(context, AddNewContact.class);
+                                startActivity(intent);
+                            }
+                        });
+                        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(context);
+                        linearLayoutManager.setOrientation(LinearLayoutManager.VERTICAL);
+                        recyclerView_all_contacts.setLayoutManager(linearLayoutManager);
+                        populateList();
+                        checkIfContactsPresent();
+                        allContactsAdapter = new AllContactsAdapter(context, allContactList);
+                        recyclerView_all_contacts.setAdapter(allContactsAdapter);
+                        return true;
+                    case R.id.navigation_dashboard:
+                        frameLayoutContainer.removeAllViews();
+                        LayoutInflater.from(context).inflate(R.layout.favourite_contacts, frameLayoutContainer, true);
+                        return true;
+                    case R.id.navigation_notifications:
+                        frameLayoutContainer.removeAllViews();
+                        LayoutInflater.from(context).inflate(R.layout.linked_contacts, frameLayoutContainer, true);
+                        return true;
+                }
             }
             return false;
         }
@@ -117,7 +122,10 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onResume() {
-        allContactsAdapter.notifyDataSetChanged();
+        Log.d("DEBUG","OnResume Called");
+        populateList();
+        allContactsAdapter = new AllContactsAdapter(context, allContactList);
+        recyclerView_all_contacts.setAdapter(allContactsAdapter);
         super.onResume();
     }
 
@@ -156,5 +164,11 @@ public class MainActivity extends AppCompatActivity {
         else {
             frameLayoutContainer.findViewById(R.id.no_contact_found).setVisibility(View.INVISIBLE);
         }
+    }
+
+    @Override
+    protected void onPause() {
+        Log.d("DEBUG","onPause called");
+        super.onPause();
     }
 }

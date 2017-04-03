@@ -1,6 +1,7 @@
 package com.psx.sqllitedatabsedemo.Adapters;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Color;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -14,6 +15,7 @@ import android.widget.TextView;
 import com.amulyakhare.textdrawable.TextDrawable;
 import com.amulyakhare.textdrawable.util.ColorGenerator;
 import com.psx.sqllitedatabsedemo.Model.Contact;
+import com.psx.sqllitedatabsedemo.Model.ViewContact;
 import com.psx.sqllitedatabsedemo.R;
 
 import java.util.List;
@@ -42,9 +44,17 @@ public class AllContactsAdapter extends RecyclerView.Adapter<AllContactsAdapter.
 
 
     @Override
-    public void onBindViewHolder(CardViewHolder holder, int position) {
+    public void onBindViewHolder(CardViewHolder holder, final int position) {
         String str="";
         holder.contact_name.setText(contactList.get(position).getFirst_name()+" "+contactList.get(position).getLast_name());
+        holder.contact_name.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(context,ViewContact.class);
+                intent.putExtra("id",contactList.get(position).getId());
+                context.startActivity(intent);
+            }
+        });
         String contactname = holder.contact_name.getText().toString();
         String[] splitted = contactname.split(" ");
         Log.d("CHECK",contactname);

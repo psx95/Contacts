@@ -57,7 +57,6 @@ public class AddNewContact extends AppCompatActivity {
         final Drawable arrow = ContextCompat.getDrawable(getApplicationContext(),R.drawable.ic_back);
         arrow.setColorFilter(ContextCompat.getColor(getApplicationContext(),R.color.md_black_1000), PorterDuff.Mode.SRC_ATOP);
         getSupportActionBar().setHomeAsUpIndicator(arrow);
-        assert actionBar!=null;
         imageView = (ImageView) findViewById(R.id.imageView2);
         actionBar.setHomeButtonEnabled(true);
         actionBar.setDisplayHomeAsUpEnabled(true);
