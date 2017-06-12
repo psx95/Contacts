@@ -52,6 +52,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
         // execute SQL
         sqLiteDatabase.execSQL(CREATE_CONTACTS_TABLE);
+        // execSQL is used for sql statements that do not return any data
     }
 
     @Override
@@ -75,6 +76,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         SQLiteDatabase database = this.getReadableDatabase();
         Cursor cursor = database.query(DATABASE_TABLE, new String[]{KEY_ID,KEY_NAME_FIRST,KEY_NAME_LAST,KEY_EMAIL,KEY_PHONE_NO}, KEY_ID +"=?",
                 new String[]{String.valueOf(id)},null,null,null,null);
+        
         if (cursor != null){
             cursor.moveToFirst();
         }
@@ -114,7 +116,10 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     {
         return 0;
     }
-    public void deleteContact (){
-        return;
+    public void deleteContact (Contact contact){
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.delete(DATABASE_TABLE, KEY_ID + " = ?",
+                new String[] { String.valueOf(contact.getId()) });
+        db.close();
     }
 }

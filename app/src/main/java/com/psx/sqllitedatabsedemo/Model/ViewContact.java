@@ -78,6 +78,7 @@ public class ViewContact extends AppCompatActivity {
             if (contact.getLast_name().length()>0){
                 y = contact.getLast_name().charAt(0);
             }
+            Log.d("STRING",x+""+y);
             textView_name.setText((contact.getFirst_name().toString()+" "+contact.getLast_name().toString()));
         }
         if (contact.getEmail_id() == null){
@@ -104,7 +105,7 @@ public class ViewContact extends AppCompatActivity {
         str2 += Character.toString(y);
         if (x!='\u0000' && y!='\u0000' && flag!=1){
             str.concat(str2);
-            Log.d("CHECK_STR",str+ " "+contact.getLast_name().toString()+str2+" Y is "+y);
+            Log.d("STRING",str+ str2+" Y is "+y+" last name is"+contact.getLast_name());
             TextDrawable textDrawable = builder.build(str+str2, chosen_color);
             imageView_pic.setImageDrawable(textDrawable);
         }

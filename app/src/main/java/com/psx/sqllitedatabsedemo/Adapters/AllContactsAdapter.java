@@ -3,13 +3,14 @@ package com.psx.sqllitedatabsedemo.Adapters;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
+import android.support.design.widget.CoordinatorLayout;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.ListView;
 import android.widget.TextView;
 
 import com.amulyakhare.textdrawable.TextDrawable;
@@ -46,6 +47,12 @@ public class AllContactsAdapter extends RecyclerView.Adapter<AllContactsAdapter.
     @Override
     public void onBindViewHolder(CardViewHolder holder, final int position) {
         String str="";
+        /*holder.cardView.setRadius(15f);
+        holder.cardView.setCardElevation(5f);
+        holder.cardView.setLayoutParams(new
+        CoordinatorLayout.LayoutParams(CardView.LayoutParams.WRAP_CONTENT,CardView.LayoutParams.WRAP_CONTENT));
+        /*to set the padding of the card view setPadding (left, top, bototm, right)*/
+        //holder.cardView.setPadding(0,0,0,0);
         holder.contact_name.setText(contactList.get(position).getFirst_name()+" "+contactList.get(position).getLast_name());
         holder.contact_name.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -91,11 +98,13 @@ public class AllContactsAdapter extends RecyclerView.Adapter<AllContactsAdapter.
         private TextView contact_name;
         private ImageView image_holder;
         private String contactname;
+        private CardView cardView;
 
         public CardViewHolder(View itemView) {
             super(itemView);
             contact_name = (TextView) itemView.findViewById(R.id.contact_name);
             image_holder = (ImageView) itemView.findViewById(R.id.imageView_contact);
+            cardView = (CardView) itemView.findViewById(R.id.contact_card);
         }
     }
 }
