@@ -1,5 +1,6 @@
 package com.psx.sqllitedatabsedemo.Helper;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -7,50 +8,49 @@ import java.util.List;
  */
 
 public class TableMetaData {
-    List<String> fieldNames;
-    List<String> fieldtype;
-    List<String> notNull;
-    List<String> dfltValue;
-    List<String> primaryKey;
+    List<String> columnNames = new ArrayList<>();
+    List<String> coulumnDataTypes = new ArrayList<>();
+    List<String> columnPrimaryKey = new ArrayList<>();
+    List<String> columnDefaultValue = new ArrayList<>();
+    List<String> columnNotNull = new ArrayList<>();
 
-
-    public List<String> getFieldNames() {
-        return fieldNames;
+    public List<String> getColumnNames() {
+        return columnNames;
     }
 
-    public void setFieldName(List<String> tableName) {
-        this.fieldNames = tableName;
+    public void setColumnNames(List<String> columnNames) {
+        this.columnNames = columnNames;
     }
 
-    public List<String> getFieldtype() {
-        return fieldtype;
+    public List<String> getCoulumnDataTypes() {
+        return coulumnDataTypes;
     }
 
-    public void setFieldtype(List<String> fieldtype) {
-        this.fieldtype = fieldtype;
+    public void setCoulumnDataTypes(List<String> coulumnDataTypes) {
+        this.coulumnDataTypes = coulumnDataTypes;
     }
 
-    public List<String> getNotNull() {
-        return notNull;
+    public List<String> getColumnPrimaryKey() {
+        return columnPrimaryKey;
     }
 
-    public void setNotNull(List<String> notNull) {
-        this.notNull = notNull;
+    public void setColumnPrimaryKey(List<String> columnPrimaryKey) {
+        this.columnPrimaryKey = columnPrimaryKey;
     }
 
-    public List<String> getDfltValue() {
-        return dfltValue;
+    public List<String> getColumnDefaultValue() {
+        return columnDefaultValue;
     }
 
-    public void setDfltValue(List<String> dfltValue) {
-        this.dfltValue = dfltValue;
+    public void setColumnDefaultValue(List<String> columnDefaultValue) {
+        this.columnDefaultValue = columnDefaultValue;
     }
 
-    public List<String> getPrimaryKey() {
-        return primaryKey;
+    public List<String> getColumnNotNull() {
+        return columnNotNull;
     }
 
-    public void setPrimaryKey(List<String> primaryKey) {
-        this.primaryKey = primaryKey;
+    public void setColumnNotNull(List<String> columnNotNull) {
+        this.columnNotNull = columnNotNull;
     }
 }

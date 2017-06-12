@@ -4,6 +4,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
@@ -20,9 +21,10 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
     // static values for the database
     // Database version
-    private static final int DATABASE_VERSION = 1;
+    private static int DATABASE_VERSION = 2
+            ;
     // Database Name
-    private static final String DATABASE_NAME = "ContactsManager";
+    public static final String DATABASE_NAME = "ContactsManager";
     // Database Table
     private static final String DATABASE_TABLE = "contacts";
 
@@ -54,13 +56,40 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
         // execute SQL
         sqLiteDatabase.execSQL(CREATE_CONTACTS_TABLE);
+            doOnUpgrade(sqLiteDatabase);
+
         // execSQL is used for sql statements that do not return any data
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase sqLiteDatabase, int old_version, int new_version) {
-        sqLiteDatabase.execSQL("DROP TABLE IF EXISTS "+DATABASE_TABLE);
+        Log.d(TAG,"onUpgade");
+        if (new_version > 1) {
+            doOnUpgrade(sqLiteDatabase);
+        }
         onCreate(sqLiteDatabase);
+    }
+
+    public void doOnUpgrade (SQLiteDatabase sqLiteDatabase) {
+        TableMetaData tableMetaData = info(sqLiteDatabase);
+        String alter_table_query = "ALTER TABLE " + DATABASE_TABLE + " RENAME TO temp";
+        String create_table_query = "CREATE TABLE " + DATABASE_TABLE + " ("+ extractQueryFromMetaData(tableMetaData,"lastname","last")+")";
+        Log.d(TAG,create_table_query+ " This is the query created");
+        String columnNamesNew = generateColumnNamesFromMetaData(tableMetaData,"lastname","last");
+        String columnNamesOld = generateColumnNamesFromMetaData(tableMetaData,"lastname","lastname");
+        String copy_query = "INSERT INTO " + DATABASE_TABLE + "(" + columnNamesNew +") SELECT " + columnNamesOld + " FROM  temp";
+        sqLiteDatabase.beginTransaction();
+        try {
+            sqLiteDatabase.execSQL(alter_table_query);
+            Log.d(TAG,sqLiteDatabase.getPath());
+            sqLiteDatabase.execSQL(create_table_query);
+            sqLiteDatabase.execSQL(copy_query);
+            sqLiteDatabase.execSQL("DROP TABLE temp");
+        } catch (SQLiteException e) {
+            e.printStackTrace();
+        } finally {
+            sqLiteDatabase.endTransaction();
+        }
     }
 
     //  THE CRUD OPERATIONS FOR THE DATABASE
@@ -125,91 +154,95 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         db.close();
     }
 
-    public void renameDatabaseColumns (String table_name, String old_column_name, String new_column_name){
-        String alter_table_query = "ALTER TABLE "+table_name+" RENAME TO "+table_name+"temp";
-        SQLiteDatabase database = this.getWritableDatabase();
-        database.execSQL(alter_table_query);
-        TableMetaData NewtableMetaData = createNewDatabaseTable(database,table_name,old_column_name,new_column_name);
-        copyOldContentsToNewTable(table_name,NewtableMetaData);
-        dropOldTable(database,table_name);
-    }
-
-    public void dropOldTable (SQLiteDatabase database, String table_name){
-        String dropTable = "DROP TABLE "+table_name+"temp";
-        database.execSQL(dropTable);
-    }
-
-    public void copyOldContentsToNewTable (String table_name, TableMetaData metaData){
-        String copy_query = "INSERT INTO "+ table_name + "( ";
-        String table_columns = "";
-        for (int i = 0; i < metaData.fieldNames.size();i++){
-            table_columns+=metaData.fieldNames.get(i);
-            if (i!=metaData.fieldNames.size()-1)
-                table_columns+=", ";
-        }
-        copy_query+=table_columns+" ) SELECT "+table_columns+" FROM "+table_name+"temp";
-    }
-
-    public TableMetaData createNewDatabaseTable (SQLiteDatabase database, String table_name, String old_column_name, String new_column_name){
-        // get the info about current database table
-        String table_meta_data_query = "PRAGMA table_info("+table_name+")";
-        Cursor cursor = database.rawQuery(table_meta_data_query,null);
-        TableMetaData metaData = extractTableInfo(cursor,old_column_name,new_column_name);
-        String new_table_creation_query = "CREATE TABLE "+table_name+" ( ";
-        String table_column_info= "";
-        for (int i =0; i < metaData.getFieldNames().size(); i++){
-            table_column_info+=metaData.getFieldNames().get(i)+" ";
-            table_column_info+=metaData.getFieldtype().get(i)+" ";
-            table_column_info+=metaData.getPrimaryKey().get(i)+" ";
-            table_column_info+=metaData.getNotNull().get(i)+" ";
-            table_column_info+=metaData.getDfltValue().get(i)+" ";
-            if (!(i == metaData.getFieldNames().size()-1))
-                table_column_info+=",";
-            Log.d(TAG,"column info "+table_column_info);
-        }
-        new_table_creation_query += table_column_info + ")";
-        database.execSQL(new_table_creation_query);
-        return metaData;
-    }
-
-    public TableMetaData extractTableInfo (Cursor cursor, String old_column_name, String new_column_name) {
+    public TableMetaData info(SQLiteDatabase sqLiteDatabase){
+        String table_meta_data_query = "PRAGMA table_info(" + DATABASE_TABLE + ")";
+        Cursor cursor = sqLiteDatabase.rawQuery(table_meta_data_query, null);
+        // cursor must have all the info about the data returned by the query
+        List<String> columnNames = new ArrayList<>();
+        List<String> columnDataTypes = new ArrayList<>();
+        List<String> columnPrimaryKey = new ArrayList<>();
+        List<String> columnDefaultValue = new ArrayList<>();
+        List<String> columnNotNull = new ArrayList<>();
         TableMetaData tableMetaData = new TableMetaData();
-        List<String>  fieldNames = new ArrayList<>();
-        List<String> tableType = new ArrayList<>();
-        List<String> tableNotNullValue = new ArrayList<>();
-        List<String> tableDefaultValue = new ArrayList<>();
-        List<String> tablePrimaryKey = new ArrayList<>();
-        try{
-            int field_nameIndex = cursor.getColumnIndexOrThrow("name");
-            int variable_typeIndex = cursor.getColumnIndexOrThrow("type");
-            int notNullValueIndex = cursor.getColumnIndexOrThrow("notnull");
-            int defaultValueIndex = cursor.getColumnIndexOrThrow("dflt_value");
-            int primaryKeyIndex = cursor.getColumnIndexOrThrow("pk");
-            while (cursor.moveToNext()) {
-                if (cursor.getString(field_nameIndex).equals(old_column_name))
-                    fieldNames.add(new_column_name);
-                else
-                    fieldNames.add(cursor.getString(field_nameIndex));
-                tableType.add(cursor.getString(variable_typeIndex));
-                if (cursor.getString(notNullValueIndex).equals("1"))
-                    tableNotNullValue.add("NOT NULL");
-                else
-                    tableNotNullValue.add("");
-                if (!cursor.getString(defaultValueIndex).equals(""))
-                    tableDefaultValue.add("DEFAULT "+cursor.getString(defaultValueIndex));
-                if (cursor.getString(primaryKeyIndex).equals("1"))
-                    tablePrimaryKey.add("PRIMARY KEY");
-            }
-        }catch (RuntimeException e){
-            e.printStackTrace();
-        } finally {
-            cursor.close();
-            tableMetaData.setDfltValue(tableDefaultValue);
-            tableMetaData.setNotNull(tableNotNullValue);
-            tableMetaData.setFieldtype(tableType);
-            tableMetaData.setPrimaryKey(tablePrimaryKey);
-            tableMetaData.setFieldName(fieldNames);
-            return tableMetaData;
+        if (cursor.moveToFirst()){
+            do{
+                Log.d(TAG,cursor.getString(1)+" "+cursor.getString(2)+" "+cursor.getString(3)+" "+cursor.getString(4)+" "+cursor.getString(5));
+                columnNames.add(cursor.getString(1));
+                columnDataTypes.add(cursor.getString(2));
+                columnNotNull.add(cursor.getString(3));
+                columnDefaultValue.add(cursor.getString(4));
+                columnPrimaryKey.add(cursor.getString(5));
+            } while (cursor.moveToNext());
+        }
+        tableMetaData.setColumnNames(columnNames);
+        tableMetaData.setCoulumnDataTypes(columnDataTypes);
+        tableMetaData.setColumnDefaultValue(columnDefaultValue);
+        tableMetaData.setColumnNotNull(columnNotNull);
+        tableMetaData.setColumnPrimaryKey(columnPrimaryKey);
+        printMetaData(tableMetaData);
+        return tableMetaData;
+    }
+
+    public  void iterateThroughAList (List<String> list) {
+        for (String s : list) {
+            Log.d(TAG+"DATA",s+"");
         }
     }
+
+    public void printMetaData (TableMetaData metaData) {
+        iterateThroughAList(metaData.columnNames);
+        iterateThroughAList(metaData.coulumnDataTypes);
+        iterateThroughAList(metaData.columnNotNull);
+        iterateThroughAList(metaData.columnDefaultValue);
+        iterateThroughAList(metaData.columnPrimaryKey);
+    }
+
+    public String extractQueryFromMetaData (TableMetaData metaData, String old_col_name, String new_col_name){
+        int size = metaData.getColumnNames().size();
+        Log.d(TAG, "size of notnull "+metaData.getColumnNotNull().size());
+        Log.d(TAG, "size of names "+size);
+        Log.d(TAG, "size of primary keys"+metaData.getColumnPrimaryKey().size());
+        Log.d(TAG, "size of default values "+metaData.getColumnDefaultValue().size());
+        Log.d(TAG, "size of data types "+metaData.getCoulumnDataTypes().size());
+        String extracted_query = "";
+        String curr_col_name;
+        for (int i = 0; i<size; i++){
+            curr_col_name = metaData.getColumnNames().get(i);
+            if (curr_col_name.equals(old_col_name))
+                curr_col_name = new_col_name;
+            extracted_query+= curr_col_name+" "; // id
+            extracted_query+= metaData.getCoulumnDataTypes().get(i)+" ";
+            if (metaData.getColumnDefaultValue()!= null){
+                if (metaData.getColumnDefaultValue().get(i) != null)
+                    extracted_query+= "DEFAULT "+metaData.getColumnDefaultValue().get(i);
+            }
+            if (metaData.getColumnNotNull() != null) {
+                if (Integer.parseInt(metaData.getColumnNotNull().get(i)) == 1)
+                    extracted_query += "NOT NULL ";
+            }
+            if (Integer.parseInt(metaData.getColumnPrimaryKey().get(i)) == 1)
+                extracted_query+= "PRIMARY KEY ";
+            if (i != size-1)
+                extracted_query+= ", ";
+        }
+        return extracted_query;
+    }
+
+    public String generateColumnNamesFromMetaData (TableMetaData metaData, String old_col_name, String new_col_name){
+        String column_names = "";
+        String curr_name;
+        List<String> columnNames = metaData.getColumnNames();
+        for (int i = 0; i < columnNames.size(); i++){
+            if (columnNames.get(i).equals(old_col_name))
+                curr_name = new_col_name;
+            else
+                curr_name = columnNames.get(i);
+            if (i!=columnNames.size()-1)
+                column_names+= curr_name+", ";
+            else
+                column_names+= curr_name;
+        }
+        return column_names;
+    }
+
 }

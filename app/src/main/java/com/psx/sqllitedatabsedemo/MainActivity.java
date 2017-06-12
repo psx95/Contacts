@@ -2,6 +2,7 @@ package com.psx.sqllitedatabsedemo;
 
 import android.content.Context;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
@@ -141,7 +142,11 @@ public class MainActivity extends AppCompatActivity {
         int id = item.getItemId();
         switch (id){
             case R.id.action_settings:
-                databaseHandler.renameDatabaseColumns("contacts","firstname","first");
+                //databaseHandler.renameDatabaseColumns("contacts","firstname","first"
+                /*DatabaseHandler databaseHandler = new DatabaseHandler(context,DatabaseHandler.DATABASE_NAME,null,DatabaseHandler.DATABASE_VERSION++);
+                databaseHandler.getReadableDatabase();*/
+                DatabaseHandler databaseHandler = new DatabaseHandler(context,"contacts",null,3);
+                Log.d("Main Activity ","clicked "+databaseHandler.getWritableDatabase().getVersion());
                 return true;
         }
         return super.onOptionsItemSelected(item);
