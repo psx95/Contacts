@@ -141,6 +141,7 @@ public class MainActivity extends AppCompatActivity {
         int id = item.getItemId();
         switch (id){
             case R.id.action_settings:
+                databaseHandler.renameDatabaseColumns("contacts","firstname","first");
                 return true;
         }
         return super.onOptionsItemSelected(item);
