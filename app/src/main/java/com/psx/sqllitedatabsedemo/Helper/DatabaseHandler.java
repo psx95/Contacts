@@ -21,8 +21,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
     // static values for the database
     // Database version
-    private static int DATABASE_VERSION = 2
-            ;
+    public static int DATABASE_VERSION = 3 ;
     // Database Name
     public static final String DATABASE_NAME = "ContactsManager";
     // Database Table
@@ -50,46 +49,66 @@ public class DatabaseHandler extends SQLiteOpenHelper {
                 + KEY_ID + " INTEGER PRIMARY KEY, " + KEY_NAME_FIRST + " TEXT, " + KEY_NAME_LAST + " TEXT, "
                 + KEY_EMAIL + " TEXT, "
                 + KEY_PHONE_NO + " TEXT " + ")";*/
+        Log.d(TAG,"onCreate ");
         String CREATE_CONTACTS_TABLE = "CREATE TABLE " + DATABASE_TABLE + "("
                 + KEY_ID + " INTEGER PRIMARY KEY, " + KEY_NAME_FIRST + " TEXT, " + KEY_NAME_LAST + " TEXT, "+ KEY_EMAIL + " TEXT, "
                 + KEY_PHONE_NO + " TEXT" + ");";
 
         // execute SQL
         sqLiteDatabase.execSQL(CREATE_CONTACTS_TABLE);
-            doOnUpgrade(sqLiteDatabase);
+          //  doOnUpgrade(sqLiteDatabase);
 
         // execSQL is used for sql statements that do not return any data
     }
 
     @Override
+    public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        db.setVersion(2);
+    }
+
+    @Override
     public void onUpgrade(SQLiteDatabase sqLiteDatabase, int old_version, int new_version) {
         Log.d(TAG,"onUpgade");
-        if (new_version > 1) {
+        if (new_version > old_version) {
             doOnUpgrade(sqLiteDatabase);
-        }
+            DATABASE_VERSION++;
+        } else {
         onCreate(sqLiteDatabase);
+        }
     }
 
     public void doOnUpgrade (SQLiteDatabase sqLiteDatabase) {
         TableMetaData tableMetaData = info(sqLiteDatabase);
-        String alter_table_query = "ALTER TABLE " + DATABASE_TABLE + " RENAME TO temp";
-        String create_table_query = "CREATE TABLE " + DATABASE_TABLE + " ("+ extractQueryFromMetaData(tableMetaData,"lastname","last")+")";
+        String alter_table_query = "ALTER TABLE temp RENAME TO "+ DATABASE_TABLE;
+        String create_table_query = "CREATE TABLE temp " + " ("+ extractQueryFromMetaData(tableMetaData,"lastname","last")+")";
         Log.d(TAG,create_table_query+ " This is the query created");
         String columnNamesNew = generateColumnNamesFromMetaData(tableMetaData,"lastname","last");
         String columnNamesOld = generateColumnNamesFromMetaData(tableMetaData,"lastname","lastname");
-        String copy_query = "INSERT INTO " + DATABASE_TABLE + "(" + columnNamesNew +") SELECT " + columnNamesOld + " FROM  temp";
+        Log.d(TAG,"new column names "+columnNamesNew);
+        Log.d(TAG,"old column names "+columnNamesOld);
+        String copy_query = "INSERT INTO temp " + "(" + columnNamesNew +") SELECT " + columnNamesOld + " FROM " + DATABASE_TABLE;
         sqLiteDatabase.beginTransaction();
         try {
-            sqLiteDatabase.execSQL(alter_table_query);
             Log.d(TAG,sqLiteDatabase.getPath());
             sqLiteDatabase.execSQL(create_table_query);
             sqLiteDatabase.execSQL(copy_query);
-            sqLiteDatabase.execSQL("DROP TABLE temp");
+            sqLiteDatabase.execSQL("DROP TABLE "+ DATABASE_TABLE);
+            sqLiteDatabase.execSQL(alter_table_query);
         } catch (SQLiteException e) {
             e.printStackTrace();
         } finally {
             sqLiteDatabase.endTransaction();
+            TableMetaData metaData = info(sqLiteDatabase);
+            printMetaData(metaData);
         }
+        Cursor c = sqLiteDatabase.rawQuery("SELECT name FROM sqlite_master WHERE type='table'", null);
+        if (c.moveToFirst()) {
+            while ( !c.isAfterLast() ) {
+                Log.d(TAG,"Table Name=> "+c.getString(0));
+                c.moveToNext();
+            }
+        }
+        c.close();
     }
 
     //  THE CRUD OPERATIONS FOR THE DATABASE
@@ -112,6 +131,8 @@ public class DatabaseHandler extends SQLiteOpenHelper {
             cursor.moveToFirst();
         }
         Contact contact = new Contact(Integer.parseInt(cursor.getString(0)), cursor.getString(1), cursor.getString(2), cursor.getString(3),cursor.getString(4));
+        cursor.close();
+        database.close();
         return contact;
     }
     public List<Contact> getAllContacts (){
@@ -131,6 +152,8 @@ public class DatabaseHandler extends SQLiteOpenHelper {
                 contactList.add(contact);
             }while (cursor.moveToNext());
         }
+        cursor.close();
+        database.close();
         return contactList;
     }
     public int getContactsCount ()
@@ -141,6 +164,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         Cursor cursor = database.rawQuery(countQuery,null);
         count = cursor.getCount();
         cursor.close();
+        database.close();
         return count;
     }
     public int updateContact ()
@@ -174,6 +198,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
                 columnPrimaryKey.add(cursor.getString(5));
             } while (cursor.moveToNext());
         }
+        cursor.close();
         tableMetaData.setColumnNames(columnNames);
         tableMetaData.setCoulumnDataTypes(columnDataTypes);
         tableMetaData.setColumnDefaultValue(columnDefaultValue);

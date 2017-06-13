@@ -2,6 +2,7 @@ package com.psx.sqllitedatabsedemo;
 
 import android.content.Context;
 import android.content.Intent;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -23,6 +24,7 @@ import android.widget.Toast;
 
 import com.psx.sqllitedatabsedemo.Adapters.AllContactsAdapter;
 import com.psx.sqllitedatabsedemo.Helper.DatabaseHandler;
+import com.psx.sqllitedatabsedemo.Helper.TableMetaData;
 import com.psx.sqllitedatabsedemo.Model.Contact;
 
 import java.util.ArrayList;
@@ -100,7 +102,7 @@ public class MainActivity extends AppCompatActivity {
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
         // get the instance of DatabaseHandler for all the databse related options
         frameLayoutContainer.removeAllViews();
-        databaseHandler = new DatabaseHandler(context);
+        databaseHandler = new DatabaseHandler(context,DatabaseHandler.DATABASE_NAME,null,DatabaseHandler.DATABASE_VERSION);
         LayoutInflater.from(context).inflate(R.layout.all_contacts,frameLayoutContainer,true);
         recyclerView_all_contacts = (RecyclerView) frameLayoutContainer.findViewById(R.id.contacts_holder);
         floatingActionButton = (FloatingActionButton) frameLayoutContainer.findViewById(R.id.floatingActionButton);
@@ -145,8 +147,12 @@ public class MainActivity extends AppCompatActivity {
                 //databaseHandler.renameDatabaseColumns("contacts","firstname","first"
                 /*DatabaseHandler databaseHandler = new DatabaseHandler(context,DatabaseHandler.DATABASE_NAME,null,DatabaseHandler.DATABASE_VERSION++);
                 databaseHandler.getReadableDatabase();*/
-                DatabaseHandler databaseHandler = new DatabaseHandler(context,"contacts",null,3);
-                Log.d("Main Activity ","clicked "+databaseHandler.getWritableDatabase().getVersion());
+                DatabaseHandler databaseHandler = new DatabaseHandler(context,DatabaseHandler.DATABASE_NAME,null,DatabaseHandler.DATABASE_VERSION);
+                SQLiteDatabase db = databaseHandler.getWritableDatabase();
+                Log.d("Main Activity ","clicked "+db.getVersion());
+                db.close();
+                TableMetaData tableMetaData = databaseHandler.info(databaseHandler.getReadableDatabase());
+                databaseHandler.printMetaData(tableMetaData);
                 return true;
         }
         return super.onOptionsItemSelected(item);
