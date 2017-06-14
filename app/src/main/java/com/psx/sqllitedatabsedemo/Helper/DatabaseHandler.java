@@ -21,7 +21,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
     // static values for the database
     // Database version
-    public static int DATABASE_VERSION = 3 ;
+    public static int DATABASE_VERSION = 3;
     // Database Name
     public static final String DATABASE_NAME = "ContactsManager";
     // Database Table
@@ -68,13 +68,24 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase sqLiteDatabase, int old_version, int new_version) {
-        Log.d(TAG,"onUpgade");
+        Log.d(TAG,"onUpgade ");
         if (new_version > old_version) {
             doOnUpgrade(sqLiteDatabase);
-            DATABASE_VERSION++;
+            String update_user_database_version  = "PRAGMA user_version = " + new_version;
+            Log.d(TAG,"Update query is "+ update_user_database_version);
+            sqLiteDatabase.execSQL(update_user_database_version);
         } else {
         onCreate(sqLiteDatabase);
         }
+        String q = "PRAGMA user_version";
+        Cursor cursor = sqLiteDatabase.rawQuery(q,null);
+        if (cursor.moveToFirst()) {
+            while ( !cursor.isAfterLast() ) {
+                Log.d(TAG, cursor.getInt(0) + " this is the current user_ version after update " + DATABASE_VERSION + "This is the database version as defined");
+                cursor.moveToNext();
+            }
+        }
+        cursor.close();
     }
 
     public void doOnUpgrade (SQLiteDatabase sqLiteDatabase) {

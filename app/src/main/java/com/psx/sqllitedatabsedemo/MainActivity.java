@@ -2,6 +2,7 @@ package com.psx.sqllitedatabsedemo;
 
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -29,6 +30,8 @@ import com.psx.sqllitedatabsedemo.Model.Contact;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.psx.sqllitedatabsedemo.Helper.DatabaseHandler.DATABASE_VERSION;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -102,7 +105,7 @@ public class MainActivity extends AppCompatActivity {
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
         // get the instance of DatabaseHandler for all the databse related options
         frameLayoutContainer.removeAllViews();
-        databaseHandler = new DatabaseHandler(context,DatabaseHandler.DATABASE_NAME,null,DatabaseHandler.DATABASE_VERSION);
+        databaseHandler = new DatabaseHandler(context,DatabaseHandler.DATABASE_NAME,null, DATABASE_VERSION);
         LayoutInflater.from(context).inflate(R.layout.all_contacts,frameLayoutContainer,true);
         recyclerView_all_contacts = (RecyclerView) frameLayoutContainer.findViewById(R.id.contacts_holder);
         floatingActionButton = (FloatingActionButton) frameLayoutContainer.findViewById(R.id.floatingActionButton);
@@ -147,9 +150,18 @@ public class MainActivity extends AppCompatActivity {
                 //databaseHandler.renameDatabaseColumns("contacts","firstname","first"
                 /*DatabaseHandler databaseHandler = new DatabaseHandler(context,DatabaseHandler.DATABASE_NAME,null,DatabaseHandler.DATABASE_VERSION++);
                 databaseHandler.getReadableDatabase();*/
-                DatabaseHandler databaseHandler = new DatabaseHandler(context,DatabaseHandler.DATABASE_NAME,null,DatabaseHandler.DATABASE_VERSION);
+                DatabaseHandler databaseHandler = new DatabaseHandler(context,DatabaseHandler.DATABASE_NAME,null, DATABASE_VERSION);
                 SQLiteDatabase db = databaseHandler.getWritableDatabase();
                 Log.d("Main Activity ","clicked "+db.getVersion());
+                String q = "PRAGMA user_version";
+                Cursor cursor = db.rawQuery(q,null);
+                if (cursor.moveToFirst()) {
+                    while ( !cursor.isAfterLast() ) {
+                        Log.d("Main Activity", cursor.getInt(0) + " this is the current user_ version after update " + DATABASE_VERSION + "This is the database version as defined");
+                        cursor.moveToNext();
+                    }
+                }
+                cursor.close();
                 db.close();
                 TableMetaData tableMetaData = databaseHandler.info(databaseHandler.getReadableDatabase());
                 databaseHandler.printMetaData(tableMetaData);
